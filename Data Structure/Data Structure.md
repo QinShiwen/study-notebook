@@ -232,11 +232,211 @@ var decodeString = function(s) {
 
 ## 树
 
-### 深度遍历
+### 深度优先
 
 #### 二叉树右视图
 
 
 
+#### 子节点最近公共祖先
 
+给定一个二叉树, 找到该树中两个指定节点的最近公共祖先。
+
+最近公共祖先的定义为：“对于有根树 T 的两个节点 p、q，最近公共祖先表示为一个节点 x，满足 x 是 p、q 的祖先且 x 的深度尽可能大（**一个节点也可以是它自己的祖先**）。”
+
+![binarytree](D:\大四\前端开发实习学习准备\Frontend-projects\Notebook\Data Structure\pics\binarytree.png)
+
+```js
+输入：root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 4
+输出：5
+解释：节点 5 和节点 4 的最近公共祖先是节点 5 。因为根据定义最近公共祖先节点可以为节点本身。
+```
+
+**公共祖先条件判断**
+
+最近的节点左右两边有p、q  或者 当前节点为p或者q的值且其左右两边任意一边存在p，q
+
+```
+(left&&right) || (node.val == p) && (left||right) || (node.val==q) && (left||right)
+```
+
+```js
+var lowestCommonAncestor = function (root, p, q) {
+    //node.val 互不相同 
+    //公共祖先条件：(left&&right) || (node.val == p) && (left||right) || (node.val==q) && (left||right)
+    let flag = false, res = -1
+    function dfs(node) {
+        if (flag) return false //找到就剪枝
+        if (!node) return false
+        let left = dfs(node.left)
+        let right = dfs(node.right)
+        //判断该节点是否为公共祖先
+        if (left && right ||
+            (node.val === p.val && (left || right)) ||
+            (node.val === q.val && (left || right))) {
+            flag = true  //found
+            res = node
+        }
+        if (node.val == p.val || node.val == q.val) return true
+        return (left || right)
+    }
+    dfs(root)
+    return res
+};
+```
+
+
+
+#### 路径总和 III
+
+给定一个二叉树的根节点 `root` ，和一个整数 `targetSum` ，求该二叉树里节点值之和等于 `targetSum` 的 **路径** 的数目。
+
+**路径** 不需要从根节点开始，也不需要在叶子节点结束，但是路径方向必须是向下的（只能从父节点到子节点）。
+
+![pathsum3-1-tree](D:\大四\前端开发实习学习准备\Frontend-projects\Notebook\Data Structure\pics\pathsum3-1-tree.jpg)
+
+```js
+//实例
+输入：root = [10,5,-3,3,2,null,11,3,-2,null,1], targetSum = 8
+输出：3
+解释：和等于 8 的路径有 3 条，如图所示。
+```
+
+**解决方案**
+
+对每一个节点求解符合条件的路径数目。
+
+```js
+//计算该节点下符合条件的路径
+function rootSum(node, sum) {
+    if (!node) return 0
+    //返回结果值
+    let ret = 0
+    if ((sum - node.val) === 0) ret += 1
+    ret += rootSum(node.left, sum - node.val)
+    ret += rootSum(node.right, sum - node.val)
+    return ret
+}
+//遍历节点
+var pathSum = function (root, targetSum) {
+    if (!root) return 0
+    //返回结果值
+    let ret = 0
+    //找本节点下符合条件的所有路径
+    ret += rootSum(root, targetSum)
+    //再往下左右节点去找
+    ret += pathSum(root.left, targetSum)
+    ret += pathSum(root.right, targetSum)
+    return ret
+};
+```
+
+
+
+#### 二叉树中的最长交错路径
+
+
+
+```js
+var longestZigZag = function(root) {
+    let res = 0
+    //计算当前节点的最长交错路径
+    function maxPath(node,flag,level){
+        if(!node) return level
+        node.val = -1
+        let left = 0,right =0
+        //剪枝：往没开辟过的地方遍历
+        if(flag){
+            if(node.left && node.left.val<0) return level
+            left = maxPath(node.left,false,level+1)
+        }else{
+            if(node.right && node.right.val<0) return level
+            right = maxPath(node.right,true,level+1)
+        }
+        return Math.max(left,right)
+    }
+    //遍历每一个节点
+    function travelNode(node){
+        if(!node) return
+        let ret = Math.max(maxPath(node.left,false,0),maxPath(node.right,true,0))
+        res = (ret>res)?ret:res
+        travelNode(node.left)
+        travelNode(node.right)
+    }
+    
+    travelNode(root)
+    return res
+};
+```
+
+
+
+
+
+### 二叉搜索树
+
+二叉搜索树有以下性质：
+
+左子树的所有节点（如果有）的值均小于当前节点的值；
+右子树的所有节点（如果有）的值均大于当前节点的值；
+左子树和右子树均为二叉搜索树。
+
+
+
+####  删除二叉搜索树中的节点
+
+给定一个二叉搜索树的根节点 **root** 和一个值 **key**，删除二叉搜索树中的 **key** 对应的节点，并保证二叉搜索树的性质不变。返回二叉搜索树（有可能被更新）的根节点的引用。
+
+一般来说，删除节点可分为两个步骤：
+
+1. 首先找到需要删除的节点；
+2. 如果找到了，删除它。
+
+![del_node_1](D:\大四\前端开发实习学习准备\Frontend-projects\Notebook\Data Structure\pics\del_node_1.jpg)
+
+```js
+输入：root = [5,3,6,2,4,null,7], key = 3
+输出：[5,4,6,2,null,null,7]
+解释：给定需要删除的节点值是 3，所以我们首先找到 3 这个节点，然后删除它。
+一个正确的答案是 [5,4,6,2,null,null,7], 如下图所示。
+另一个正确答案是 [5,2,6,null,4,null,7]。
+```
+
+**Solution**
+
+- 没找到删除节点：直接返回。
+- 找到删除节点：
+  1. 无左右节点：直接删除该节点；
+  2. 仅无左节点或者仅无右节点：让不为空的左or右补上该节点；
+  3. 左右节点都不为空：当删除节点有两个子节点时，你需要找到右子树中最小的节点，并将其值赋给要删除的节点，然后再删除右子树中最小的节点。
+
+在删除节点时，不能改变参数node `node = null` 来尝试删除节点，这只是将 `node` 变量指向了 `null`，并不会影响原始树结构。正确的删除节点方式是将父节点的指针指向正确的子节点。
+
+```js
+var deleteNode = function (root, key) {
+    //树为空
+    if (!root) return root
+    if (root.val === key) {
+        if (!root.left && !root.right) return null
+        if (!root.left) return root.right
+        if (!root.right) return root.left
+        //存在左右节点
+        let cur = root.right
+        while(cur.left){
+            cur = cur.left
+        }
+        cur.left = root.left
+        root = root.right
+        delete root
+        return root
+    }
+    //往下寻找
+    if(root.val<key){
+        root.right = deleteNode(root.right,key)
+    }else{
+        root.left = deleteNode(root.left,key)
+    }
+    return root
+};
+```
 
