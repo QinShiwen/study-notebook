@@ -533,8 +533,16 @@ RIGHT JOIN table3 ON table2.id = table3.id;
   GROUP by S.user_id
   ```
 
-  ```
+  ```mysql
   # Way 3
+  SELECT
+  	s.user_id,
+  	ifnull( round( sum( action = 'confirmed' ) / count( c.action ), 2 ), 0.00 ) AS confirmation_rate 
+  FROM
+  	signups AS s
+  	LEFT JOIN confirmations AS c ON s.user_id = c.user_id 
+  GROUP BY
+  	s.user_id
   ```
 
   
